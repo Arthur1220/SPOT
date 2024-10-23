@@ -1,0 +1,6 @@
+plaintext
+pyrealsense2
+numpy
+customtkinter
+Pillow
+opencv-python
