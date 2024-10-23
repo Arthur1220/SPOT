@@ -1,9 +1,8 @@
 ## README.md
 
-```markdown
 # SPOT - Sistema Peso Ovino Tridimensional
 
-O projeto SPOT é um sistema desenvolvido para capturar informações tridimensionais de ovinos, com o objetivo de auxiliar na predição de peso e outras métricas relevantes na pecuária. O sistema utiliza a câmera Intel RealSense D455 para capturar imagens coloridas e de profundidade, permitindo a análise e armazenamento de dados para futuras implementações de machine learning.
+O projeto SPOT é um sistema desenvolvido para capturar informações tridimensionais de ovinos, com o objetivo de auxiliar na predição de peso e outras métricas relevantes. O sistema utiliza a câmera Intel RealSense D455 para capturar imagens coloridas e de profundidade, permitindo a análise e armazenamento de dados para futuras implementações de machine learning.
 
 ## Funcionalidades
 
