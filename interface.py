@@ -4,6 +4,8 @@ from database import salvar_informacoes, initialize_database, fetch_all_records
 from camera_system import DepthCamera
 import cv2  
 import numpy as np
+import tkinter as tk
+from tkinter import messagebox  # Importa o messagebox
 import sqlite3
 
 class InitialScreen(customtkinter.CTk):
@@ -11,9 +13,21 @@ class InitialScreen(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.title("SPOT - Sistema Peso Ovino Tridimensional")
-        self.geometry("400x300")
+        self.geometry("400x400")
         self.resizable(False, False)
         customtkinter.set_appearance_mode("dark")  
+
+        try:
+            logo_image = customtkinter.CTkImage(
+                light_image=Image.open("SPOT_images/sheep_2.png"), 
+                dark_image=Image.open("SPOT_images/sheep_2.png"), 
+                size=(200, 200)  
+            )
+            self.logo_label = customtkinter.CTkLabel(self, image=logo_image, text="")
+            self.logo_label.image = logo_image  # Mantém uma referência para evitar coleta de lixo
+            self.logo_label.pack(pady=10)
+        except Exception as e:
+            print(f"Erro ao carregar o logotipo: {e}")
 
         self.label = customtkinter.CTkLabel(self, text="Bem-vindo ao SPOT", font=("Helvetica", 20))
         self.label.pack(pady=20)
@@ -188,7 +202,7 @@ class MyFramePeso(customtkinter.CTkFrame):
         self.peso_display.place(x=115, y=40)
 
 class MyFrameConfig(customtkinter.CTkFrame):
-    def __init__(self, master, camera_frame, **kwargs):
+    def __init__(self, master, camera_frame=None, **kwargs):
         super().__init__(master, **kwargs, width=250, height=500)
         """Frame principal de configuração."""
         self.camera_frame = camera_frame
@@ -197,8 +211,8 @@ class MyFrameConfig(customtkinter.CTkFrame):
         self.label_title.place(x=80, y=10)
 
         self.image = customtkinter.CTkImage(
-            light_image=Image.open("sheep_2.png"), 
-            dark_image=Image.open("sheep_2.png"), 
+            light_image=Image.open("SPOT_images/sheep_2.png"), 
+            dark_image=Image.open("SPOT_images/sheep_2.png"), 
             size=(150, 150)
         )
         self.image_label = customtkinter.CTkLabel(self, image=self.image, text="")
@@ -234,12 +248,12 @@ class MyFrameConfig(customtkinter.CTkFrame):
         # Obtém o peso inserido pelo usuário
         peso_text = self.my_framePeso.peso_entry.get()
         if not peso_text:
-            print("Por favor, insira o peso.")
+            messagebox.showwarning("Aviso", "Por favor, insira o peso.")
             return
         try:
             peso_float = float(peso_text)
         except ValueError:
-            print("Por favor, insira um valor numérico para o peso.")
+            messagebox.showerror("Erro", "Por favor, insira um valor numérico para o peso.")
             return
 
         distancia_text = self.my_frameInfo.distancia_var.get().replace(" cm", "")
@@ -249,7 +263,7 @@ class MyFrameConfig(customtkinter.CTkFrame):
             distancia_float = float(distancia_text)
             area_float = float(area_text)
         except ValueError:
-            print("Erro ao converter distância ou área.")
+            messagebox.showerror("Erro", "Erro ao converter distância ou área.")
             return
 
         # Obtém os frames mais recentes da câmera
@@ -257,7 +271,7 @@ class MyFrameConfig(customtkinter.CTkFrame):
         depth_frame = self.camera_frame.latest_depth_frame
 
         if color_frame is None or depth_frame is None:
-            print("Não foi possível obter os frames da câmera.")
+            messagebox.showerror("Erro", "Não foi possível obter os frames da câmera.")
             return
 
         # Processa o frame de profundidade para criar uma imagem colorida (padrão de temperatura)
@@ -275,10 +289,14 @@ class MyFrameConfig(customtkinter.CTkFrame):
         # Salva os dados no banco de dados
         salvar_informacoes(peso_float, distancia_float, area_float, imagem_color_bytes, imagem_depth_bytes)
 
-        print('Informações salvas com sucesso!')
+        # Exibe um popup de confirmação
+        messagebox.showinfo("Sucesso", "Informações salvas com sucesso!")
 
         # Exibe as imagens capturadas
-        self.display_captured_images(color_frame, depth_colormap)
+        #self.display_captured_images(color_frame, depth_colormap)
+
+        # Opcional: Limpar o campo de entrada após salvar
+        self.my_framePeso.peso_entry.delete(0, tk.END)
 
     def display_captured_images(self, color_frame, depth_colormap):
         """Exibe as imagens capturadas em uma nova janela."""
@@ -397,11 +415,18 @@ class App(customtkinter.CTk):
         self.resizable(False, False)
         customtkinter.set_appearance_mode("dark")  
 
+        self.my_frameConfig = MyFrameConfig(master=self)
+        self.my_frameConfig.place(x=690, y=20)
+
         self.my_frameCamera = MyFrameCamera(master=self)
         self.my_frameCamera.place(x=20, y=20)
 
-        self.my_frameConfig = MyFrameConfig(master=self, camera_frame=self.my_frameCamera)
-        self.my_frameConfig.place(x=690, y=20)
+        self.my_frameConfig.camera_frame = self.my_frameCamera
+
+    def view_data(self):
+        """Abre a janela de visualização de dados a partir da tela principal."""
+        viewer = DataViewer()
+        viewer.mainloop()
 
 if __name__ == "__main__":
     initialize_database()
